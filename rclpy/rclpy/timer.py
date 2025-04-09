@@ -65,6 +65,8 @@ class Timer:
         # True when the callback is ready to fire but has not been "taken" by an executor
         self._executor_event = False
 
+        self.register_timer_for_tracing(id(callback), callback.__name__)    
+        
     @property
     def handle(self):
         return self.__timer

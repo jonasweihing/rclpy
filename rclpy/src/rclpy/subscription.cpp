@@ -21,6 +21,8 @@
 #include <rosidl_runtime_c/message_type_support_struct.h>
 #include <rmw/types.h>
 
+#include <tracetools/tracetools.h>
+
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -71,6 +73,11 @@ Subscription::Subscription(
 
   *rcl_subscription_ = rcl_get_zero_initialized_subscription();
 
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_subscription_init,
+    static_cast<const void *>(rcl_subscription_.get()),
+    static_cast<const void *>(this));
+
   rcl_ret_t ret = rcl_subscription_init(
     rcl_subscription_.get(), node_.rcl_ptr(), msg_type,
     topic.c_str(), &subscription_ops);
@@ -100,6 +107,11 @@ Subscription::take_message(py::object pymsg_type, bool raw)
     SerializedMessage taken{rcutils_get_default_allocator()};
     rcl_ret_t ret = rcl_take_serialized_message(
       rcl_subscription_.get(), &taken.rcl_msg, &message_info, NULL);
+
+    TRACETOOLS_TRACEPOINT(
+      rclcpp_take,
+      static_cast<const void *>(&taken.rcl_msg));
+    
     if (RCL_RET_OK != ret) {
       if (RCL_RET_BAD_ALLOC == ret) {
         rcl_reset_error();
@@ -182,6 +194,20 @@ Subscription::get_publisher_count() const
 }
 
 void
+Subscription::register_subscription_for_tracing(u_int64_t callback, char * function_symbol)
+{
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_subscription_callback_added,
+    static_cast<const void *>(this),
+    reinterpret_cast<const void *>(callback));
+  
+  TRACETOOLS_TRACEPOINT(rclcpp_callback_register,
+    reinterpret_cast<const void*>(callback),
+    function_symbol
+  );
+}
+
+void
 define_subscription(py::object module)
 {
   py::class_<Subscription, Destroyable, std::shared_ptr<Subscription>>(module, "Subscription")
@@ -202,6 +228,9 @@ define_subscription(py::object module)
     "Return the resolved topic name of a subscription.")
   .def(
     "get_publisher_count", &Subscription::get_publisher_count,
-    "Count the publishers from a subscription.");
+    "Count the publishers from a subscription.")
+  .def(
+    "register_subscription_for_tracing", &Subscription::register_subscription_for_tracing,
+    "Trace the registration of a subscription.");
 }
 }  // namespace rclpy

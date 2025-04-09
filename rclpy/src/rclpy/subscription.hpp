@@ -105,6 +105,14 @@ public:
   void
   destroy() override;
 
+  /// Trace the registration of a subscription.
+  /**
+   * \param[in] callback pointer to callback object
+   * \param[in] function_symbol demangled symbol of the callback function/lambda
+   */
+  void 
+  register_subscription_for_tracing(u_int64_t callback, char * function_symbol);
+
 private:
   Node node_;
   std::shared_ptr<rcl_subscription_t> rcl_subscription_;

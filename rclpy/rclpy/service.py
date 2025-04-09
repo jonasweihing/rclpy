@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
-from typing import TypeVar
+from typing import Callable, TypeVar
 
 from rclpy.callback_groups import CallbackGroup
 from rclpy.clock import Clock
@@ -60,6 +59,8 @@ class Service:
         # True when the callback is ready to fire but has not been "taken" by an executor
         self._executor_event = False
         self.qos_profile = qos_profile
+
+        self.__service.register_service_for_tracing(id(callback), callback.__name__)
 
     def send_response(self, response: SrvTypeResponse, header) -> None:
         """

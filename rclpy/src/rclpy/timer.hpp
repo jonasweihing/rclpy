@@ -136,9 +136,19 @@ public:
   /// Force an early destruction of this object
   void destroy() override;
 
+  /// Trace the registration of a timer.
+  /**
+   * \param[in] callback pointer to callback object
+   * \param[in] function_symbol demangled symbol of the callback function/lambda
+   */
+  void 
+  register_timer_for_tracing(u_int64_t callback, char * function_symbol);
+
 private:
   Context context_;
   Clock clock_;
+  uint64_t callback_id_;
+  char * callback_name_;
   std::shared_ptr<rcl_timer_t> rcl_timer_;
 };
 

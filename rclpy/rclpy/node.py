@@ -1771,6 +1771,9 @@ class Node:
         callback_group.add_entity(timer)
         self._timers.append(timer)
         self._wake_executor()
+
+        self.link_timer_to_node_for_tracing(timer.__timer.rcl_ptr)
+
         return timer
 
     def create_guard_condition(

@@ -19,6 +19,8 @@
 #include <rosidl_runtime_c/message_type_support_struct.h>
 #include <rmw/serialized_message.h>
 
+#include <tracetools/tracetools.h>
+
 #include <memory>
 #include <string>
 
@@ -126,6 +128,11 @@ Publisher::publish(py::object pymsg)
   if (!raw_ros_message) {
     throw py::error_already_set();
   }
+
+  TRACETOOLS_TRACEPOINT(rclcpp_publish,
+    static_cast<const void *>(nullptr),
+    static_cast<const void *>(&raw_ros_message)
+  );
 
   rcl_ret_t ret = rcl_publish(rcl_publisher_.get(), raw_ros_message.get(), NULL);
   if (RCL_RET_OK != ret) {

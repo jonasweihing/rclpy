@@ -24,6 +24,8 @@
 #include <rcl_yaml_param_parser/parser.h>
 #include <rcutils/format_string.h>
 
+#include <tracetools/tracetools.h>
+
 #include <limits>
 #include <memory>
 #include <regex>
@@ -577,6 +579,14 @@ Node::get_action_names_and_types()
   return convert_to_py_names_and_types(&names_and_types);
 }
 
+void 
+Node::link_timer_to_node_for_tracing(u_int64_t timer_handle)
+{
+  TRACETOOLS_TRACEPOINT(rclcpp_timer_link_node,
+    reinterpret_cast<const void *>(timer_handle),
+    reinterpret_cast<const void *>(rcl_node_.get()));
+}
+
 void
 define_node(py::object module)
 {
@@ -631,6 +641,9 @@ define_node(py::object module)
     "Get action names and types.")
   .def(
     "get_parameters", &Node::get_parameters,
-    "Get a list of parameters for the current node");
+    "Get a list of parameters for the current node")
+  .def(
+    "link_timer_to_node_for_tracing", &Node::link_timer_to_node_for_tracing,
+    "Trace a link between a timer and a node.");
 }
 }  // namespace rclpy

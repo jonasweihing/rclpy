@@ -200,6 +200,13 @@ public:
   void
   destroy() override;
 
+  /// Trace a link between a timer and a node.
+  /**
+   * \param[in] timer_handle pointer to the timer's `rcl_timer_t` handle
+   */
+  void 
+  link_timer_to_node_for_tracing(u_int64_t timer_handle);
+
 private:
   /// Get the list of nodes discovered by the provided node
   /**

@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
 import inspect
-from typing import Callable
-from typing import TypeVar
+from enum import Enum
+from typing import Callable, TypeVar
 
 from rclpy.callback_groups import CallbackGroup
-from rclpy.event_handler import EventHandler
-from rclpy.event_handler import SubscriptionEventCallbacks
+from rclpy.event_handler import EventHandler, SubscriptionEventCallbacks
 from rclpy.impl.implementation_singleton import rclpy_implementation as _rclpy
 from rclpy.qos import QoSProfile
-
 
 # For documentation only
 MsgType = TypeVar('MsgType')
@@ -75,6 +72,8 @@ class Subscription:
 
         self.event_handlers: EventHandler = event_callbacks.create_event_handlers(
             callback_group, subscription_impl, topic)
+
+        self.__subscription.register_subscription_for_tracing(id(callback), callback.__name__)
 
     def get_publisher_count(self) -> int:
         """Get the number of publishers that this subscription has."""

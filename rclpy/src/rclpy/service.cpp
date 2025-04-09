@@ -20,6 +20,8 @@
 #include <rosidl_runtime_c/service_type_support_struct.h>
 #include <rmw/types.h>
 
+#include <tracetools/tracetools.h>
+
 #include <memory>
 #include <string>
 
@@ -174,6 +176,20 @@ Service::configure_introspection(
 }
 
 void
+Service::register_service_for_tracing(u_int64_t callback, char * function_symbol)
+{
+  // TRACETOOLS_TRACEPOINT(
+  //   rclcpp_serivce_callback_added,
+  //   static_cast<const void *>(rcl_service_.get()),
+  //   reinterpret_cast<const void *>(callback));
+  
+  TRACETOOLS_TRACEPOINT(rclcpp_callback_register,
+    reinterpret_cast<const void*>(callback),
+    function_symbol
+  );
+}
+
+void
 define_service(py::object module)
 {
   py::class_<Service, Destroyable, std::shared_ptr<Service>>(module, "Service")
@@ -197,6 +213,9 @@ define_service(py::object module)
     "Take a request from a given service")
   .def(
     "configure_introspection", &Service::configure_introspection,
-    "Configure whether introspection is enabled");
+    "Configure whether introspection is enabled")
+  .def(
+    "register_service_for_tracing", &Service::register_service_for_tracing,
+    "Trace the registration of a service.");
 }
 }  // namespace rclpy

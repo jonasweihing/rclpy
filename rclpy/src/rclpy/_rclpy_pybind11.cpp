@@ -53,6 +53,8 @@
 #include "type_description_service.hpp"
 #include "utils.hpp"
 #include "wait_set.hpp"
+#include "executors.hpp"
+
 
 namespace py = pybind11;
 
@@ -242,6 +244,26 @@ PYBIND11_MODULE(_rclpy_pybind11, m) {
   m.def(
     "rclpy_logging_configure", rclpy::logging_configure,
     "Initialize RCL logging.");
+
+  m.def(
+      "trace_waiting_of_executor", &rclpy::trace_waiting_of_executor,
+      "Trace the waiting state of the executor.");
+
+  m.def(
+      "trace_execution_of_executor", &rclpy::trace_execution_of_executor,
+      "Trace the execution state of the executor.");
+
+  m.def(
+      "trace_get_ready_for_next_of_executor", &rclpy::trace_get_ready_for_next_of_executor,
+      "Trace the getting ready for next state of the executor.");
+
+  m.def(
+      "trace_start_of_callback", &rclpy::trace_start_of_callback,
+      "Trace the beginning of a callback.");
+
+  m.def(
+      "trace_end_of_callback", &rclpy::trace_end_of_callback,
+      "Trace the end of a callback.");
 
   rclpy::define_logging_api(m);
   rclpy::define_signal_handler_api(m);

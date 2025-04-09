@@ -12,30 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from concurrent.futures import ThreadPoolExecutor
-from contextlib import ExitStack
 import inspect
 import os
-from threading import Condition
-from threading import Lock
-from threading import RLock
 import time
-from types import TracebackType
-from typing import Any
-from typing import Callable
-from typing import ContextManager
-from typing import Coroutine
-from typing import Generator
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Type
-from typing import TYPE_CHECKING
-from typing import TypeVar
-from typing import Union
-
 import warnings
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
+from threading import Condition, Lock, RLock
+from types import TracebackType
+from typing import (TYPE_CHECKING, Any, Callable, ContextManager, Coroutine,
+                    Generator, List, Optional, Set, Tuple, Type, TypeVar,
+                    Union)
 
 from rclpy.client import Client
 from rclpy.clock import Clock
@@ -47,13 +34,10 @@ from rclpy.impl.implementation_singleton import rclpy_implementation as _rclpy
 from rclpy.service import Service
 from rclpy.signals import SignalHandlerGuardCondition
 from rclpy.subscription import Subscription
-from rclpy.task import Future
-from rclpy.task import Task
+from rclpy.task import Future, Task
 from rclpy.timer import Timer
-from rclpy.utilities import get_default_context
-from rclpy.utilities import timeout_sec_to_nsec
-from rclpy.waitable import NumberOfEntities
-from rclpy.waitable import Waitable
+from rclpy.utilities import get_default_context, timeout_sec_to_nsec
+from rclpy.waitable import NumberOfEntities, Waitable
 
 # For documentation purposes
 # TODO(jacobperron): Make all entities implement the 'Waitable' interface for better type checking
@@ -95,6 +79,7 @@ class _WorkTracker:
             timeout_sec = None
         # Wait for all work to complete
         with self._work_condition:
+            _rclpy.trace_waiting_of_executor(int(timeout_sec * 1000))
             if not self._work_condition.wait_for(
                     lambda: self._num_work_executing == 0, timeout_sec):
                 return False
@@ -103,13 +88,18 @@ class _WorkTracker:
 
 async def await_or_execute(callback: Union[Callable, Coroutine], *args) -> Any:
     """Await a callback if it is a coroutine, else execute it."""
+    _rclpy.trace_execution_of_executor(id(callback))
+    _rclpy.trace_start_of_callback(id(callback))
+    
     if inspect.iscoroutinefunction(callback):
         # Await a coroutine
-        return await callback(*args)
+        result = await callback(*args)
     else:
         # Call a normal function
-        return callback(*args)
-
+        result = callback(*args)
+    
+    _rclpy.trace_end_of_callback(id(callback))
+    return result
 
 class TimeoutException(Exception):
     """Signal that a timeout occurred."""
@@ -551,6 +541,8 @@ class Executor(ContextManager['Executor']):
         :param condition: A callable that makes the function return immediately when it evaluates
             to True.
         """
+        _rclpy.trace_get_ready_for_next_of_executor()
+        
         timeout_timer = None
         timeout_nsec = timeout_sec_to_nsec(
             timeout_sec.timeout if isinstance(timeout_sec, TimeoutObject) else timeout_sec)

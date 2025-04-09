@@ -114,6 +114,15 @@ public:
   void
   destroy() override;
 
+  /// Trace the registration of a service.
+  /**
+   * \param[in] callback pointer to callback object
+   * \param[in] function_symbol demangled symbol of the callback function/lambda
+   */
+  void 
+  register_service_for_tracing(u_int64_t callback, char * function_symbol);
+
+
 private:
   Node node_;
   std::shared_ptr<rcl_service_t> rcl_service_;

@@ -18,6 +18,8 @@
 #include <rcl/timer.h>
 #include <rcl/types.h>
 
+#include <tracetools/tracetools.h>
+
 #include <memory>
 
 #include "clock.hpp"
@@ -155,6 +157,20 @@ bool Timer::is_timer_canceled()
   return is_canceled;
 }
 
+void 
+Timer::register_timer_for_tracing(u_int64_t callback, char * function_symbol)
+{
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_timer_callback_added,
+    static_cast<const void *>(rcl_timer_.get()),
+    reinterpret_cast<const void *>(callback));
+
+  TRACETOOLS_TRACEPOINT(
+    rclcpp_callback_register,
+    reinterpret_cast<const void *>(callback),
+    function_symbol);
+}
+
 void
 define_timer(py::object module)
 {
@@ -189,7 +205,10 @@ define_timer(py::object module)
     "Cancel a timer.")
   .def(
     "is_timer_canceled", &Timer::is_timer_canceled,
-    "Check if a timer is canceled.");
+    "Check if a timer is canceled.")
+  .def(
+    "register_timer_for_tracing", &Timer::register_timer_for_tracing,
+    "Trace the registration of a timer.");
 }
 
 }  // namespace rclpy
